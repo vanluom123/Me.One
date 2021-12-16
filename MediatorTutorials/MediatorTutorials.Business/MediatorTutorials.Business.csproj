@@ -1,0 +1,14 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <TargetFramework>net5.0</TargetFramework>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\..\Me.One.Core.CQRS\Me.One.Core.CQRS.csproj" />
+    <ProjectReference Include="..\..\Me.One.Core.Data\Me.One.Core.Data.csproj" />
+    <ProjectReference Include="..\..\Me.One.Core\Me.One.Core.csproj" />
+    <ProjectReference Include="..\MediatorTutorials.Core\MediatorTutorials.Core.csproj" />
+  </ItemGroup>
+
+</Project>
