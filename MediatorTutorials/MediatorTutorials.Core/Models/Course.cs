@@ -21,6 +21,6 @@ namespace MediatorTutorials.Core.Models
         }
 
         public string Name { get; set; }
-        public HashSet<StudentCourse> StudentCourses { get; set; } = new HashSet<StudentCourse>();
+        public List<StudentCourse> StudentCourses { get; set; } = new List<StudentCourse>();
     }
 }

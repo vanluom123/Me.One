@@ -49,9 +49,6 @@ namespace Me.One.Core.Contract.Repository
 
         IEnumerable<T> GetByIds(params string[] ids);
 
-        IIncludableQueryable<T, TPro> IncludeOptimized<TPro>(
-            Expression<Func<T, TPro>> navigationPropertyPath);
-
         IIncludeableReadRepository<T, TPro> Include<TPro>(
             Expression<Func<T, TPro>> navigationPropertyPath);
 

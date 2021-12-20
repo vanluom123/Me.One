@@ -24,6 +24,6 @@ namespace MediatorTutorials.Core.Models
         public string DoB { get; set; }
         public string Gender { get; set; }
         public string Classmate { get; set; }
-        public HashSet<StudentCourse> StudentCourses { get; set; } = new HashSet<StudentCourse>();
+        public List<StudentCourse> StudentCourses { get; set; } = new List<StudentCourse>();
     }
 }

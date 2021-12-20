@@ -79,12 +79,6 @@ namespace Me.One.Core.Data
             return new QueryableRepoOperator<T>(this).Include(navigationPropertyPath);
         }
 
-        public IIncludableQueryable<T, TPro> IncludeOptimized<TPro>(
-            Expression<Func<T, TPro>> navigationPropertyPath)
-        {
-            return new QueryableRepoOperator<T>(this).IncludeOptimized(navigationPropertyPath);
-        }
-
         public IIncludeableReadRepository<T, TPro> Include<TPro>(
             Expression<Func<T, TPro>> navigationPropertyPath)
         {
@@ -236,41 +230,23 @@ namespace Me.One.Core.Data
             {
             }
 
-            public IncludeQueryableOperator(IQueryable<TEntity> queryable,
-                QueryableRepoOperator<TEntity> repo) : base(repo)
+            public IncludeQueryableOperator(
+                QueryableRepoOperator<TEntity> repo,
+                IIncludableQueryable<TEntity, TPro> includableQueryable) : base(repo)
             {
-                Query = queryable;
+                IncludableQueryable = includableQueryable;
+                Query = IncludableQueryable;
             }
 
-            public QueryableRepoOperator<TEntity> QueryableRepoOperator => this;
+            public IIncludableQueryable<TEntity, TPro> IncludableQueryable { get; private set; }
 
             public IIncludeableReadRepository<TEntity, TPro> IncludeInternal(
                 Expression<Func<TEntity, TPro>> navigationPropertyPath)
             {
-                Query = Query.Include(navigationPropertyPath);
+                IncludableQueryable = Query.Include(navigationPropertyPath);
+                Query = IncludableQueryable;
                 return this;
             }
-
-            public IIncludableQueryable<TEntity, TPro> IncludeOptimized(
-                Expression<Func<TEntity, TPro>> navigationPropertyPath)
-            {
-                Query = Query.Include(navigationPropertyPath);
-                return (IIncludableQueryable<TEntity, TPro>)Query;
-            }
-
-            public IEnumerator<TEntity> GetEnumerator()
-            {
-                return Query.GetEnumerator();
-            }
-
-            IEnumerator IEnumerable.GetEnumerator()
-            {
-                return GetEnumerator();
-            }
-
-            public Type ElementType => Query.ElementType;
-            public Expression Expression => Query.Expression;
-            public IQueryProvider Provider => Query.Provider;
         }
 
         private class JoinQueryableOperator<TEntity> : QueryableRepoOperator<TEntity>
@@ -467,44 +443,44 @@ namespace Me.One.Core.Data
         public class QueryableRepoOperator<TEntity> : IQueryRepository<TEntity>
             where TEntity : class
         {
-            protected readonly BaseReadRepository<TEntity> Repo;
+            private readonly BaseReadRepository<TEntity> _repo;
 
             public QueryableRepoOperator(BaseReadRepository<TEntity> repo)
             {
-                Repo = repo;
+                _repo = repo;
                 Query = repo.Query;
             }
 
-            public QueryableRepoOperator(
+            protected QueryableRepoOperator(
                 QueryableRepoOperator<TEntity> repo)
             {
-                Repo = repo.Repo;
+                _repo = repo._repo;
                 Query = repo.Query;
             }
 
             public TEntity GetById(Guid id)
             {
-                return Repo.GetById(id);
+                return _repo.GetById(id);
             }
 
             public TEntity GetById(string id)
             {
-                return Repo.GetById(id);
+                return _repo.GetById(id);
             }
 
             public IEnumerable<TEntity> GetByIds(params string[] ids)
             {
-                return Repo.GetByIds(ids);
+                return _repo.GetByIds(ids);
             }
 
             public IEnumerable<TEntity> List()
             {
-                return Repo.List(Query);
+                return _repo.List(Query);
             }
 
             public IEnumerable<TEntity> List(Expression<Func<TEntity, bool>> predicate)
             {
-                return Repo.List(Query, predicate);
+                return _repo.List(Query, predicate);
             }
 
             public IEnumerable<TEntity> List(
@@ -513,7 +489,7 @@ namespace Me.One.Core.Data
                 int pageSize,
                 out long totalRecords)
             {
-                return Repo.List(Query, predicate, pageIndex, pageSize, out totalRecords);
+                return _repo.List(Query, predicate, pageIndex, pageSize, out totalRecords);
             }
 
             public IEnumerable<TEntity> List(
@@ -523,24 +499,18 @@ namespace Me.One.Core.Data
                 Func<IQueryable<TEntity>, IQueryable<TEntity>> orderBy,
                 out long totalRecords)
             {
-                return Repo.List(Query, predicate, pageIndex, pageSize, orderBy, out totalRecords);
+                return _repo.List(Query, predicate, pageIndex, pageSize, orderBy, out totalRecords);
             }
 
             public bool Any(Expression<Func<TEntity, bool>> predicate = null)
             {
-                return Repo.Any(predicate);
+                return _repo.Any(predicate);
             }
 
             public IBaseQueryableOperator<TEntity> Include(string navigationPropertyPath)
             {
                 Query = Query.Include(navigationPropertyPath);
                 return this;
-            }
-
-            public IIncludableQueryable<TEntity, TPro> IncludeOptimized<TPro>(
-                Expression<Func<TEntity, TPro>> navigationPropertyPath)
-            {
-                return new IncludeQueryableOperator<TEntity, TPro>(this).IncludeOptimized(navigationPropertyPath);
             }
 
             public IIncludeableReadRepository<TEntity, TPro> Include<TPro>(
@@ -557,14 +527,14 @@ namespace Me.One.Core.Data
                 where TJoin : class
                 where TResult : class
             {
-                return Repo.Join(joinRepo, keySelector, joinSelector, selector);
+                return _repo.Join(joinRepo, keySelector, joinSelector, selector);
             }
 
             public IEnumerable<TEntity> List(
                 Expression<Func<TEntity, bool>> predicate,
                 List<OrderBy> orderBy)
             {
-                return Repo.List(predicate, orderBy);
+                return _repo.List(predicate, orderBy);
             }
 
             public IEnumerable<TEntity> List(
@@ -574,7 +544,7 @@ namespace Me.One.Core.Data
                 int pageSize,
                 out long totalRecords)
             {
-                return Repo.List(predicate, orderBy, pageIndex, pageSize, out totalRecords);
+                return _repo.List(predicate, orderBy, pageIndex, pageSize, out totalRecords);
             }
 
             public IBaseQueryableOperator<TEntity> Where(Expression<Func<TEntity, bool>> predicate)
