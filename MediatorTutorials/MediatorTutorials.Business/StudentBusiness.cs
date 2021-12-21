@@ -33,6 +33,7 @@ namespace MediatorTutorials.Business
             var result = new ListResult<GetStudentResult>();
             var students = _studentRepository
                 .Include(s => s.StudentCourses)
+                .ThenInclude(sc => sc.Course)
                 .List()
                 .ToList();
             result.Items = _mapper.Map<List<GetStudentResult>>(students);

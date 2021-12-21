@@ -3,6 +3,7 @@ using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
 using System.Linq.Expressions;
+using System.Reflection;
 using Me.One.Core.Contract.Repository;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Query;
@@ -35,8 +36,9 @@ namespace Me.One.Core.Data
         public IEnumerable<T> GetByIds(params string[] ids)
         {
             var strArray = ids;
-            for (var index = 0; index < strArray.Length; ++index)
-                yield return GetById(strArray[index]);
+            foreach (var arr in strArray)
+                yield return GetById(arr);
+
             strArray = null;
         }
 
@@ -78,7 +80,7 @@ namespace Me.One.Core.Data
         {
             return new QueryableRepoOperator<T>(this).Include(navigationPropertyPath);
         }
-
+        
         public IIncludeableReadRepository<T, TPro> Include<TPro>(
             Expression<Func<T, TPro>> navigationPropertyPath)
         {
@@ -118,7 +120,7 @@ namespace Me.One.Core.Data
             return new QueryableRepoOperator<T>(this).Where(predicate);
         }
 
-        protected IOrderedQueryable<T> Order(
+        private IOrderedQueryable<T> Order(
             IQueryable<T> query,
             string propertyName,
             bool descending,
@@ -143,14 +145,17 @@ namespace Me.One.Core.Data
         {
             var queryable = query.Where(predicate);
             var count = orderBy.Count;
-            if (count > 0)
-                for (var index = 0; index < count; ++index)
-                {
-                    var orderBy1 = orderBy[index];
-                    queryable = index != 0
-                        ? Order(queryable, orderBy1.PropertyName, orderBy1.Desc, true)
-                        : (IQueryable<T>) Order(queryable, orderBy1.PropertyName, orderBy1.Desc, false);
-                }
+            if (count <= 0)
+            {
+                return queryable.AsEnumerable();
+            }            
+            for (var index = 0; index < count; ++index)
+            {
+                var orderBy1 = orderBy[index];
+                queryable = index != 0
+                    ? Order(queryable, orderBy1.PropertyName, orderBy1.Desc, true)
+                    : (IQueryable<T>) Order(queryable, orderBy1.PropertyName, orderBy1.Desc, false);
+            }
 
             return queryable.AsEnumerable();
         }
@@ -239,7 +244,7 @@ namespace Me.One.Core.Data
             }
 
             public IIncludableQueryable<TEntity, TPro> IncludableQueryable { get; private set; }
-
+            
             public IIncludeableReadRepository<TEntity, TPro> IncludeInternal(
                 Expression<Func<TEntity, TPro>> navigationPropertyPath)
             {
@@ -276,7 +281,7 @@ namespace Me.One.Core.Data
             }
         }
 
-        internal class QueryableOperator<TEntity> : IQueryRepository<TEntity>
+        private sealed class QueryableOperator<TEntity> : IQueryRepository<TEntity>
             where TEntity : class
         {
             public QueryableOperator(IQueryable<TEntity> query)
@@ -342,9 +347,9 @@ namespace Me.One.Core.Data
                 return List(Query, predicate, orderBy, pageIndex, pageSize, out totalRecords);
             }
 
-            public IQueryable<TEntity> Query { get; protected set; }
+            public IQueryable<TEntity> Query { get; private set; }
 
-            protected IOrderedQueryable<TEntity> Order(
+            private IOrderedQueryable<TEntity> Order(
                 IQueryable<TEntity> query,
                 string propertyName,
                 bool descending,
@@ -361,7 +366,7 @@ namespace Me.One.Core.Data
                 return (IOrderedQueryable<TEntity>) query.Provider.CreateQuery<TEntity>(methodCallExpression);
             }
 
-            protected virtual IEnumerable<TEntity> List(
+            private IEnumerable<TEntity> List(
                 IQueryable<TEntity> query,
                 Expression<Func<TEntity, bool>> predicate,
                 int pageIndex,
@@ -373,7 +378,7 @@ namespace Me.One.Core.Data
                 return query.AsNoTracking().Where(predicate).Skip(count).Take(pageSize).AsEnumerable();
             }
 
-            protected virtual IEnumerable<TEntity> List(
+            private IEnumerable<TEntity> List(
                 IQueryable<TEntity> source,
                 Expression<Func<TEntity, bool>> predicate,
                 int pageIndex,
@@ -389,14 +394,14 @@ namespace Me.One.Core.Data
                 return source1.Skip(count).Take(pageSize).AsEnumerable();
             }
 
-            protected virtual IEnumerable<TEntity> List(
+            private IEnumerable<TEntity> List(
                 IQueryable<TEntity> query,
                 Expression<Func<TEntity, bool>> predicate)
             {
                 return query.AsNoTracking().Where(predicate).AsEnumerable();
             }
 
-            protected virtual IEnumerable<TEntity> List(
+            private IEnumerable<TEntity> List(
                 IQueryable<TEntity> query,
                 Expression<Func<TEntity, bool>> predicate,
                 List<OrderBy> orderBy)
@@ -415,7 +420,7 @@ namespace Me.One.Core.Data
                 return queryable.AsEnumerable();
             }
 
-            protected virtual IEnumerable<TEntity> List(
+            private IEnumerable<TEntity> List(
                 IQueryable<TEntity> query,
                 Expression<Func<TEntity, bool>> predicate,
                 List<OrderBy> orderBy,
