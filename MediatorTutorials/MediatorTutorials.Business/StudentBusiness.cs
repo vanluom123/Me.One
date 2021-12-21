@@ -31,11 +31,7 @@ namespace MediatorTutorials.Business
         public async Task<ListResult<GetStudentResult>> GetAllStudents(GetStudent query)
         {
             var result = new ListResult<GetStudentResult>();
-            var students = _studentRepository
-                .Include(s => s.StudentCourses)
-                .ThenInclude(sc => sc.Course)
-                .List()
-                .ToList();
+            var students = _studentRepository.GetListStudents();
             result.Items = _mapper.Map<List<GetStudentResult>>(students);
             return await Task.FromResult(result);
         }

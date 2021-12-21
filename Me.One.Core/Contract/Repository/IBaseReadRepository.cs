@@ -6,7 +6,7 @@ using Microsoft.EntityFrameworkCore.Query;
 
 namespace Me.One.Core.Contract.Repository
 {
-    public interface IBaseQueryableOperator<T> where T : class
+    public interface IBaseReadRepository<T> where T : class
     {
         IEnumerable<T> List();
 
@@ -36,13 +36,8 @@ namespace Me.One.Core.Contract.Repository
 
         bool Any(Expression<Func<T, bool>> predicate = null);
 
-        IBaseQueryableOperator<T> Include(string navigationPropertyPath);
-
-    }
-
-    public interface IBaseReadRepository<T> : IBaseQueryableOperator<T>
-        where T : class
-    {
+        IBaseReadRepository<T> Include(string navigationPropertyPath);
+      
         T GetById(Guid id);
 
         T GetById(string id);
@@ -52,14 +47,17 @@ namespace Me.One.Core.Contract.Repository
         IIncludeableReadRepository<T, TPro> Include<TPro>(
             Expression<Func<T, TPro>> navigationPropertyPath);
 
-        IBaseQueryableOperator<TResult> Join<TJoin, TKey, TResult>(
-            IBaseQueryableOperator<TJoin> joinRepo,
+        IBaseReadRepository<TResult> Join<TJoin, TKey, TResult>(
+            IBaseReadRepository<TJoin> joinRepo,
             Expression<Func<T, TKey>> keySelector,
             Expression<Func<TJoin, TKey>> joinSelector,
             Expression<Func<T, TJoin, TResult>> selector)
             where TJoin : class
             where TResult : class;
 
-        IBaseQueryableOperator<T> Where(Expression<Func<T, bool>> predicate);
+        IBaseReadRepository<T> Where(Expression<Func<T, bool>> predicate);
+
+        T FirstOrDefault(Expression<Func<T, bool>> predicate);
+
     }
 }

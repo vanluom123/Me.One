@@ -8,5 +8,7 @@ namespace MediatorTutorials.Core.Contacts.Repository
     public interface IStudentRepository : IBaseRepository<Student>
     {
         List<Student> GetStudentByCourse(GetStudentByCourse query);
+        Student GetStudentById(string id);
+        List<Student> GetListStudents();
     }
 }

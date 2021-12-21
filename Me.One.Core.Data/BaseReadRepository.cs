@@ -1,9 +1,7 @@
 ﻿using System;
-using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
 using System.Linq.Expressions;
-using System.Reflection;
 using Me.One.Core.Contract.Repository;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Query;
@@ -35,11 +33,7 @@ namespace Me.One.Core.Data
 
         public IEnumerable<T> GetByIds(params string[] ids)
         {
-            var strArray = ids;
-            foreach (var arr in strArray)
-                yield return GetById(arr);
-
-            strArray = null;
+            return ids.Select(GetById);
         }
 
         public virtual IEnumerable<T> List()
@@ -76,19 +70,19 @@ namespace Me.One.Core.Data
             return predicate == null ? DbSet.Any() : DbSet.Any(predicate);
         }
 
-        public IBaseQueryableOperator<T> Include(string navigationPropertyPath)
+        public IBaseReadRepository<T> Include(string navigationPropertyPath)
         {
             return new QueryableRepoOperator<T>(this).Include(navigationPropertyPath);
         }
-        
+
         public IIncludeableReadRepository<T, TPro> Include<TPro>(
             Expression<Func<T, TPro>> navigationPropertyPath)
         {
             return new QueryableRepoOperator<T>(this).Include(navigationPropertyPath);
         }
 
-        public IBaseQueryableOperator<TResult> Join<TJoin, TKey, TResult>(
-            IBaseQueryableOperator<TJoin> joinRepo,
+        public IBaseReadRepository<TResult> Join<TJoin, TKey, TResult>(
+            IBaseReadRepository<TJoin> joinRepo,
             Expression<Func<T, TKey>> keySelector,
             Expression<Func<TJoin, TKey>> joinSelector,
             Expression<Func<T, TJoin, TResult>> selector)
@@ -115,9 +109,14 @@ namespace Me.One.Core.Data
             return List(DbSet, predicate, orderBy, pageIndex, pageSize, out totalRecords);
         }
 
-        public IBaseQueryableOperator<T> Where(Expression<Func<T, bool>> predicate)
+        public IBaseReadRepository<T> Where(Expression<Func<T, bool>> predicate)
         {
             return new QueryableRepoOperator<T>(this).Where(predicate);
+        }
+
+        public T FirstOrDefault(Expression<Func<T, bool>> predicate)
+        {
+            return new QueryableRepoOperator<T>(this).FirstOrDefault(predicate);
         }
 
         private IOrderedQueryable<T> Order(
@@ -132,10 +131,10 @@ namespace Me.One.Core.Data
             var methodCallExpression = Expression.Call(
                 typeof(Queryable),
                 (!anotherLevel ? "OrderBy" : "ThenBy") + (descending ? "Descending" : string.Empty),
-                new Type[2] {typeof(T), memberExpression.Type},
+                new Type[2] { typeof(T), memberExpression.Type },
                 query.Expression,
                 Expression.Quote(lambdaExpression));
-            return (IOrderedQueryable<T>) query.Provider.CreateQuery<T>(methodCallExpression);
+            return (IOrderedQueryable<T>)query.Provider.CreateQuery<T>(methodCallExpression);
         }
 
         protected virtual IEnumerable<T> List(
@@ -148,13 +147,14 @@ namespace Me.One.Core.Data
             if (count <= 0)
             {
                 return queryable.AsEnumerable();
-            }            
+            }
+
             for (var index = 0; index < count; ++index)
             {
                 var orderBy1 = orderBy[index];
                 queryable = index != 0
                     ? Order(queryable, orderBy1.PropertyName, orderBy1.Desc, true)
-                    : (IQueryable<T>) Order(queryable, orderBy1.PropertyName, orderBy1.Desc, false);
+                    : (IQueryable<T>)Order(queryable, orderBy1.PropertyName, orderBy1.Desc, false);
             }
 
             return queryable.AsEnumerable();
@@ -176,7 +176,7 @@ namespace Me.One.Core.Data
                     var orderBy1 = orderBy[index];
                     queryable = index != 0
                         ? Order(queryable, orderBy1.PropertyName, orderBy1.Desc, true)
-                        : (IQueryable<T>) Order(queryable, orderBy1.PropertyName, orderBy1.Desc, false);
+                        : (IQueryable<T>)Order(queryable, orderBy1.PropertyName, orderBy1.Desc, false);
                 }
 
             var count2 = (pageIndex - 1) * pageSize;
@@ -224,7 +224,7 @@ namespace Me.One.Core.Data
             return source1.Skip(count).Take(pageSize).AsEnumerable();
         }
 
-        public class IncludeQueryableOperator<TEntity, TPro> :
+        internal class IncludeQueryableOperator<TEntity, TPro> :
             QueryableRepoOperator<TEntity>,
             IIncludeableReadRepository<TEntity, TPro>
             where TEntity : class
@@ -244,7 +244,7 @@ namespace Me.One.Core.Data
             }
 
             public IIncludableQueryable<TEntity, TPro> IncludableQueryable { get; private set; }
-            
+
             public IIncludeableReadRepository<TEntity, TPro> IncludeInternal(
                 Expression<Func<TEntity, TPro>> navigationPropertyPath)
             {
@@ -262,8 +262,8 @@ namespace Me.One.Core.Data
             {
             }
 
-            public override IBaseQueryableOperator<TResult> Join<TJoin, TKey, TResult>(
-                IBaseQueryableOperator<TJoin> repo,
+            public override IBaseReadRepository<TResult> Join<TJoin, TKey, TResult>(
+                IBaseReadRepository<TJoin> repo,
                 Expression<Func<TEntity, TKey>> keySelector,
                 Expression<Func<TJoin, TKey>> joinSelector,
                 Expression<Func<TEntity, TJoin, TResult>> selector)
@@ -281,7 +281,7 @@ namespace Me.One.Core.Data
             }
         }
 
-        private sealed class QueryableOperator<TEntity> : IQueryRepository<TEntity>
+        private class QueryableOperator<TEntity> : IQueryRepository<TEntity>
             where TEntity : class
         {
             public QueryableOperator(IQueryable<TEntity> query)
@@ -324,12 +324,55 @@ namespace Me.One.Core.Data
                 return Query.Any(predicate);
             }
 
-            public IBaseQueryableOperator<TEntity> Include(string navigationPropertyPath)
+            public TEntity GetById(Guid id)
+            {
+                throw new NotImplementedException();
+            }
+
+            public TEntity GetById(string id)
+            {
+                throw new NotImplementedException();
+            }
+
+            public IEnumerable<TEntity> GetByIds(params string[] ids)
+            {
+                throw new NotImplementedException();
+            }
+
+            public IIncludeableReadRepository<TEntity, TPro> Include<TPro>(
+                Expression<Func<TEntity, TPro>> navigationPropertyPath)
+            {
+                throw new NotImplementedException();
+            }
+
+            public IBaseReadRepository<TResult> Join<TJoin, TKey, TResult>(
+                IBaseReadRepository<TJoin> joinRepo,
+                Expression<Func<TEntity, TKey>> keySelector,
+                Expression<Func<TJoin, TKey>> joinSelector,
+                Expression<Func<TEntity, TJoin, TResult>> selector)
+                where TJoin : class
+                where TResult : class
+            {
+                throw new NotImplementedException();
+            }
+
+            public IBaseReadRepository<TEntity> Where(Expression<Func<TEntity, bool>> predicate)
+            {
+                Query = Query.Where(predicate);
+                return this;
+            }
+
+            public TEntity FirstOrDefault(Expression<Func<TEntity, bool>> predicate)
+            {
+                return Query.FirstOrDefault(predicate);
+            }
+
+            public IBaseReadRepository<TEntity> Include(string navigationPropertyPath)
             {
                 Query = Query.Include(navigationPropertyPath);
                 return this;
             }
-            
+
             public IEnumerable<TEntity> List(
                 Expression<Func<TEntity, bool>> predicate,
                 List<OrderBy> orderBy)
@@ -361,9 +404,9 @@ namespace Me.One.Core.Data
                 var methodCallExpression = Expression.Call(
                     typeof(Queryable),
                     (!anotherLevel ? "OrderBy" : "ThenBy") + (descending ? "Descending" : string.Empty),
-                    new Type[2] {typeof(TEntity), memberExpression.Type},
+                    new Type[2] { typeof(TEntity), memberExpression.Type },
                     query.Expression, Expression.Quote(lambdaExpression));
-                return (IOrderedQueryable<TEntity>) query.Provider.CreateQuery<TEntity>(methodCallExpression);
+                return (IOrderedQueryable<TEntity>)query.Provider.CreateQuery<TEntity>(methodCallExpression);
             }
 
             private IEnumerable<TEntity> List(
@@ -414,7 +457,7 @@ namespace Me.One.Core.Data
                         var orderBy1 = orderBy[index];
                         queryable = index != 0
                             ? Order(queryable, orderBy1.PropertyName, orderBy1.Desc, true)
-                            : (IQueryable<TEntity>) Order(queryable, orderBy1.PropertyName, orderBy1.Desc, false);
+                            : (IQueryable<TEntity>)Order(queryable, orderBy1.PropertyName, orderBy1.Desc, false);
                     }
 
                 return queryable.AsEnumerable();
@@ -436,7 +479,7 @@ namespace Me.One.Core.Data
                         var orderBy1 = orderBy[index];
                         queryable = index != 0
                             ? Order(queryable, orderBy1.PropertyName, orderBy1.Desc, true)
-                            : (IQueryable<TEntity>) Order(queryable, orderBy1.PropertyName, orderBy1.Desc, false);
+                            : (IQueryable<TEntity>)Order(queryable, orderBy1.PropertyName, orderBy1.Desc, false);
                     }
 
                 var count2 = (pageIndex - 1) * pageSize;
@@ -445,7 +488,7 @@ namespace Me.One.Core.Data
             }
         }
 
-        public class QueryableRepoOperator<TEntity> : IQueryRepository<TEntity>
+        internal class QueryableRepoOperator<TEntity> : IQueryRepository<TEntity>
             where TEntity : class
         {
             private readonly BaseReadRepository<TEntity> _repo;
@@ -512,7 +555,7 @@ namespace Me.One.Core.Data
                 return _repo.Any(predicate);
             }
 
-            public IBaseQueryableOperator<TEntity> Include(string navigationPropertyPath)
+            public IBaseReadRepository<TEntity> Include(string navigationPropertyPath)
             {
                 Query = Query.Include(navigationPropertyPath);
                 return this;
@@ -524,8 +567,8 @@ namespace Me.One.Core.Data
                 return new IncludeQueryableOperator<TEntity, TPro>(this).IncludeInternal(navigationPropertyPath);
             }
 
-            public virtual IBaseQueryableOperator<TResult> Join<TJoin, TKey, TResult>(
-                IBaseQueryableOperator<TJoin> joinRepo,
+            public virtual IBaseReadRepository<TResult> Join<TJoin, TKey, TResult>(
+                IBaseReadRepository<TJoin> joinRepo,
                 Expression<Func<TEntity, TKey>> keySelector,
                 Expression<Func<TJoin, TKey>> joinSelector,
                 Expression<Func<TEntity, TJoin, TResult>> selector)
@@ -552,37 +595,18 @@ namespace Me.One.Core.Data
                 return _repo.List(predicate, orderBy, pageIndex, pageSize, out totalRecords);
             }
 
-            public IBaseQueryableOperator<TEntity> Where(Expression<Func<TEntity, bool>> predicate)
-            {
-                return new WhereQueryableOperator<TEntity>(this).WhereInternal(predicate);
-            }
-
-            public IQueryable<TEntity> Query { get; protected set; }
-        }
-
-        private class WhereQueryableOperator<TEntity>
-            : QueryableRepoOperator<TEntity>
-            where TEntity : class
-        {
-            public WhereQueryableOperator(QueryableRepoOperator<TEntity> repo)
-                : base(repo)
-            {
-            }
-
-            public WhereQueryableOperator(
-                QueryableRepoOperator<TEntity> repo,
-                IQueryable<TEntity> whereQuery)
-                : base(repo)
-            {
-                Query = whereQuery;
-            }
-
-            public IBaseQueryableOperator<TEntity> WhereInternal(
-                Expression<Func<TEntity, bool>> predicate)
+            public IBaseReadRepository<TEntity> Where(Expression<Func<TEntity, bool>> predicate)
             {
                 Query = Query.Where(predicate);
                 return this;
             }
+
+            public TEntity FirstOrDefault(Expression<Func<TEntity, bool>> predicate)
+            {
+                return Query.FirstOrDefault(predicate);
+            }
+
+            public IQueryable<TEntity> Query { get; protected set; }
         }
     }
 }

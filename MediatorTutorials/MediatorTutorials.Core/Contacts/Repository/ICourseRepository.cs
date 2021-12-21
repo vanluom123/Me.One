@@ -8,5 +8,6 @@ namespace MediatorTutorials.Core.Contacts.Repository
     public interface ICourseRepository : IBaseRepository<Course>
     {
         List<Course> GetCourseByStudent(GetCourseByStudent query);
+        Course GetCourseById(string id);
     }
 }

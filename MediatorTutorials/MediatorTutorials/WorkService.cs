@@ -24,7 +24,7 @@ namespace MediatorTutorials
 
         public Task StartAsync(CancellationToken cancellationToken)
         {
-            //GetStudentsByCourse();
+            GetStudentsByCourse();
             GetStudents();
             return Task.CompletedTask;
         }
@@ -69,7 +69,7 @@ namespace MediatorTutorials
 
         private void GetStudentsByCourse()
         {
-            var studentQuery = new GetStudentByCourse {Id = "C001"};
+            var studentQuery = new GetStudentByCourse { Id = "C003" };
             var getStudents = _dispatcher.GetResultAsync(studentQuery);
             var result = getStudents.Result;
 
@@ -88,7 +88,7 @@ namespace MediatorTutorials
 
         private void CreateCourse()
         {
-            var course = new CreateCourse {Id = "C003", Name = "Software Open-source"};
+            var course = new CreateCourse { Id = "C003", Name = "Software Open-source" };
             _dispatcher.SendAsync(course).Wait();
         }
 
@@ -108,7 +108,7 @@ namespace MediatorTutorials
 
         private void GetListCoursesByStudent()
         {
-            var course = new GetCourseByStudent {Id = "S002"};
+            var course = new GetCourseByStudent { Id = "S002" };
             var result = _dispatcher.GetResultAsync(course).Result;
 
             var serializer = new JsonSerializer();

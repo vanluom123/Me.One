@@ -20,5 +20,22 @@ namespace MediatorTutorials.Data
             var students = List(s => s.StudentCourses.Any(sc => sc.CourseId == query.Id)).ToList();
             return students;
         }
+
+        public Student GetStudentById(string id)
+        {
+            return this
+                .Include(s => s.StudentCourses)
+                .ThenInclude(sc => sc.Course)
+                .FirstOrDefault(s => s.Id == id);
+        }
+
+        public List<Student> GetListStudents()
+        {
+            return this
+                .Include(s => s.StudentCourses)
+                .ThenInclude(sc => sc.Course)
+                .List()
+                .ToList();
+        }
     }
 }
