@@ -1,6 +1,8 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Linq;
 using System.Linq.Expressions;
+using System.Reflection;
 using JetBrains.Annotations;
 using Me.One.Core.Contract.Repository;
 using Microsoft.EntityFrameworkCore;
@@ -15,11 +17,9 @@ namespace Me.One.Core.Data
         ) where TEntity : class
         {
             var queryableOperator = (BaseReadRepository<TEntity>.QueryableRepoOperator<TEntity>)source;
-            var includeQueryableOperator =
-                (BaseReadRepository<TEntity>.IncludeQueryableOperator<TEntity, IEnumerable<TPreviousProperty>>)source;
             return new BaseReadRepository<TEntity>.IncludeQueryableOperator<TEntity, TProperty>(
                 queryableOperator,
-                includeQueryableOperator.IncludableQueryable.ThenInclude(navigationPropertyPath));
+                source.IncludableQueryable.ThenInclude(navigationPropertyPath));
         }  
 
         public static IIncludeableReadRepository<TEntity, TProperty> ThenInclude<TEntity, TPreviousProperty, TProperty>(
@@ -27,11 +27,10 @@ namespace Me.One.Core.Data
             [NotNull] Expression<Func<TPreviousProperty, TProperty>> navigationPropertyPath)
             where TEntity : class
         {
-            var includeQueryableOperator = (BaseReadRepository<TEntity>.IncludeQueryableOperator<TEntity, TPreviousProperty>)source;
             var queryableOperator = (BaseReadRepository<TEntity>.QueryableRepoOperator<TEntity>)source;
             return new BaseReadRepository<TEntity>.IncludeQueryableOperator<TEntity, TProperty>(
                 queryableOperator,
-                includeQueryableOperator.IncludableQueryable.ThenInclude(navigationPropertyPath));
+                source.IncludableQueryable.ThenInclude(navigationPropertyPath));
         }
     }
 }
