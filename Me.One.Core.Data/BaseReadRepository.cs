@@ -10,16 +10,12 @@ namespace Me.One.Core.Data
 {
     public abstract class BaseReadRepository<T> : IBaseReadRepository<T> where T : class
     {
-        private readonly DbContext _context;
-
         protected BaseReadRepository(DbContext context)
         {
-            _context = context;
+            Query = context.Set<T>();
         }
 
-        private IQueryable<T> DbSet => _context.Set<T>();
-
-        protected virtual IQueryable<T> Query => DbSet;
+        public virtual IQueryable<T> Query { get; protected set; }
 
         public T GetById(Guid id)
         {
@@ -51,12 +47,12 @@ namespace Me.One.Core.Data
 
         public virtual IEnumerable<T> List()
         {
-            return List(DbSet);
+            return List(Query);
         }
 
         public virtual IEnumerable<T> List(Expression<Func<T, bool>> predicate)
         {
-            return List(DbSet, predicate);
+            return List(Query, predicate);
         }
 
         public virtual IEnumerable<T> List(
@@ -65,7 +61,7 @@ namespace Me.One.Core.Data
             int pageSize,
             out long totalRecords)
         {
-            return List(DbSet, predicate, pageIndex, pageSize, out totalRecords);
+            return List(Query, predicate, pageIndex, pageSize, out totalRecords);
         }
 
         public virtual IEnumerable<T> List(
@@ -75,12 +71,12 @@ namespace Me.One.Core.Data
             Func<IQueryable<T>, IQueryable<T>> orderBy,
             out long totalRecords)
         {
-            return List(DbSet, predicate, pageIndex, pageSize, orderBy, out totalRecords);
+            return List(Query, predicate, pageIndex, pageSize, orderBy, out totalRecords);
         }
 
         public bool Any(Expression<Func<T, bool>> predicate = null)
         {
-            return predicate == null ? DbSet.Any() : DbSet.Any(predicate);
+            return predicate == null ? Query.Any() : Query.Any(predicate);
         }
 
         public IBaseReadRepository<T> Include(string navigationPropertyPath)
@@ -109,7 +105,7 @@ namespace Me.One.Core.Data
             Expression<Func<T, bool>> predicate,
             List<OrderBy> orderBy)
         {
-            return List(DbSet, predicate, orderBy);
+            return List(Query, predicate, orderBy);
         }
 
         public IEnumerable<T> List(
@@ -119,7 +115,7 @@ namespace Me.One.Core.Data
             int pageSize,
             out long totalRecords)
         {
-            return List(DbSet, predicate, orderBy, pageIndex, pageSize, out totalRecords);
+            return List(Query, predicate, orderBy, pageIndex, pageSize, out totalRecords);
         }
 
         public IBaseReadRepository<T> Where(Expression<Func<T, bool>> predicate)
@@ -193,7 +189,7 @@ namespace Me.One.Core.Data
                 }
 
             var count2 = (pageIndex - 1) * pageSize;
-            totalRecords = DbSet.Count(predicate);
+            totalRecords = Query.Count(predicate);
             return queryable.Skip(count2).Take(pageSize).AsEnumerable();
         }
 
@@ -217,7 +213,7 @@ namespace Me.One.Core.Data
             out long totalRecords)
         {
             var count = (pageIndex - 1) * pageSize;
-            totalRecords = DbSet.Count(predicate);
+            totalRecords = Query.Count(predicate);
             return query.AsNoTracking().Where(predicate).Skip(count).Take(pageSize).AsEnumerable();
         }
 
@@ -267,7 +263,7 @@ namespace Me.One.Core.Data
             }
         }
 
-        private class JoinQueryableOperator<TEntity> : QueryableRepoOperator<TEntity>
+        internal class JoinQueryableOperator<TEntity> : QueryableRepoOperator<TEntity>
             where TEntity : class
         {
             public JoinQueryableOperator(BaseReadRepository<TEntity> repo)
@@ -344,29 +340,31 @@ namespace Me.One.Core.Data
 
             public TEntity GetById(string id)
             {
-                ParameterExpression parameterExpression = Expression.Parameter(typeof(TEntity), nameof(TEntity));
-                MemberExpression memberExpression = Expression.PropertyOrField(parameterExpression, "Id");
-                BinaryExpression binaryExpression = Expression.Equal(memberExpression, Expression.Variable(typeof(string)));
+                var propertyInfos = typeof(TEntity).BaseType.GetProperties();
+                var propertyInfo = propertyInfos.FirstOrDefault(info => info.Name == "Id");
+                ParameterExpression parameterExpression = Expression.Parameter(typeof(TEntity), "q");
+                MemberExpression memberExpression = Expression.Property(parameterExpression, propertyInfo);
+                BinaryExpression binaryExpression = Expression.Equal(memberExpression, Expression.Constant(id));
                 LambdaExpression lambdaExpression = Expression.Lambda(binaryExpression, parameterExpression);
                 MethodCallExpression methodCallExpression = Expression.Call(
                     typeof(Queryable),
                     "FirstOrDefault",
-                    new Type[2] { typeof(TEntity), memberExpression.Type },
+                    new Type[] { typeof(TEntity) },
                     Query.Expression,
                     Expression.Quote(lambdaExpression));
-                Query = Query.Provider.CreateQuery<TEntity>(methodCallExpression);
-                return Query.Provider.Execute<TEntity>(methodCallExpression);
+                var result = Query.Provider.Execute<TEntity>(methodCallExpression);
+                return result;
             }
 
             public IEnumerable<TEntity> GetByIds(params string[] ids)
             {
-                throw new NotImplementedException();
+                return ids.Select(GetById);
             }
 
             public IIncludeableReadRepository<TEntity, TPro> Include<TPro>(
                 Expression<Func<TEntity, TPro>> navigationPropertyPath)
             {
-                throw new NotImplementedException();
+                throw new NotSupportedException();
             }
 
             public IBaseReadRepository<TResult> Join<TJoin, TKey, TResult>(
@@ -377,7 +375,7 @@ namespace Me.One.Core.Data
                 where TJoin : class
                 where TResult : class
             {
-                throw new NotImplementedException();
+                throw new NotSupportedException();
             }
 
             public IBaseReadRepository<TEntity> Where(Expression<Func<TEntity, bool>> predicate)
@@ -414,7 +412,7 @@ namespace Me.One.Core.Data
                 return List(Query, predicate, orderBy, pageIndex, pageSize, out totalRecords);
             }
 
-            public IQueryable<TEntity> Query { get; private set; }
+            public IQueryable<TEntity> Query { get; protected set; }
 
             private IOrderedQueryable<TEntity> Order(
                 IQueryable<TEntity> query,
@@ -631,7 +629,11 @@ namespace Me.One.Core.Data
                 return Query.FirstOrDefault(predicate);
             }
 
-            public IQueryable<TEntity> Query { get; protected set; }
+            public IQueryable<TEntity> Query
+            {
+                get { return _repo.Query; }
+                protected set { _repo.Query = value; }
+            }
         }
     }
 }

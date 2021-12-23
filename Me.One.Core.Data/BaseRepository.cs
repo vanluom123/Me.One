@@ -97,8 +97,8 @@ namespace Me.One.Core.Data
         public virtual void BatchInsertOrUpdate(IEnumerable<T> entities, bool saveChanges = false)
         {
             var baseEntities = entities.ToList();
-            BatchInsert(baseEntities.Where((Func<T, bool>) (item => string.IsNullOrWhiteSpace(item.Id))), saveChanges);
-            BatchUpdate(baseEntities.Where((Func<T, bool>) (item => !string.IsNullOrWhiteSpace(item.Id))), saveChanges);
+            BatchInsert(baseEntities.Where((Func<T, bool>)(item => string.IsNullOrWhiteSpace(item.Id))), saveChanges);
+            BatchUpdate(baseEntities.Where((Func<T, bool>)(item => !string.IsNullOrWhiteSpace(item.Id))), saveChanges);
         }
 
         public virtual void BatchMarkDelete(IEnumerable<T> entities, bool saveChanges = false)
@@ -112,7 +112,7 @@ namespace Me.One.Core.Data
                 entity.Ticks = DateTime.UtcNow.Ticks;
             }
 
-            if (!DbSet.Local.Any((Func<T, bool>) (p => baseEntities.Any((Func<T, bool>) p.Equals))))
+            if (!DbSet.Local.Any((Func<T, bool>)(p => baseEntities.Any((Func<T, bool>)p.Equals))))
                 DbSet.UpdateRange(baseEntities);
             SaveChangeAction(saveChanges);
         }
@@ -127,7 +127,7 @@ namespace Me.One.Core.Data
                 entity.Ticks = DateTime.UtcNow.Ticks;
             }
 
-            if (!DbSet.Local.Any((Func<T, bool>) (p => baseEntities.Any((Func<T, bool>) p.Equals))))
+            if (!DbSet.Local.Any((Func<T, bool>)(p => baseEntities.Any((Func<T, bool>)p.Equals))))
                 DbSet.UpdateRange(baseEntities);
             SaveChangeAction(saveChanges);
         }
@@ -185,7 +185,7 @@ namespace Me.One.Core.Data
             else
             {
                 var baseEntities = entities.ToList();
-                foreach (var obj in baseEntities.Where((Func<T, bool>) (x => string.IsNullOrEmpty(x.Id))))
+                foreach (var obj in baseEntities.Where((Func<T, bool>)(x => string.IsNullOrEmpty(x.Id))))
                     obj.Id = Guid.NewGuid().ToString();
                 DbSet.AddRange(baseEntities);
                 SaveChangeAction(saveChanges);
@@ -203,7 +203,7 @@ namespace Me.One.Core.Data
                 var baseEntities = entities.ToList();
                 foreach (var entity in baseEntities)
                     ++entity.RowVersion;
-                if (!DbSet.Local.Any((Func<T, bool>) (p => baseEntities.Any((Func<T, bool>) p.Equals))))
+                if (!DbSet.Local.Any((Func<T, bool>)(p => baseEntities.Any((Func<T, bool>)p.Equals))))
                     DbSet.UpdateRange(baseEntities);
                 SaveChangeAction(saveChanges);
             }
@@ -225,16 +225,16 @@ namespace Me.One.Core.Data
             bool saveChanges = false)
         {
             var baseEntities = entities.ToList();
-            BatchInsert(baseEntities.Where((Func<T, bool>) (item => string.IsNullOrWhiteSpace(item.Id))), saveChanges,
+            BatchInsert(baseEntities.Where((Func<T, bool>)(item => string.IsNullOrWhiteSpace(item.Id))), saveChanges,
                 autoSetAuditFields);
-            BatchUpdate(baseEntities.Where((Func<T, bool>) (item => !string.IsNullOrWhiteSpace(item.Id))), saveChanges,
+            BatchUpdate(baseEntities.Where((Func<T, bool>)(item => !string.IsNullOrWhiteSpace(item.Id))), saveChanges,
                 autoSetAuditFields);
         }
 
         private void UpdateInternal(T entity, bool saveChanges = false)
         {
             var entityEntry = _context.Entry(entity);
-            var entity1 = _context.Set<T>().Local.FirstOrDefault((Func<T, bool>) (x => x.Id == entity.Id));
+            var entity1 = _context.Set<T>().Local.FirstOrDefault((Func<T, bool>)(x => x.Id == entity.Id));
             if (entity1 != null && entityEntry.State == EntityState.Detached)
                 foreach (var property in _context.Entry(entity1).Properties)
                 {

@@ -34,13 +34,15 @@ namespace Me.One.Core.Data
         }
 
         public static IBaseReadRepository<TProperty> Select<TEntity, TProperty>(
-            this IQueryRepository<TEntity> source,
-            Expression<Func<TEntity, TProperty>> predicate)
+            [NotNull] this IBaseReadRepository<TEntity> source,
+            [NotNull] Expression<Func<TEntity, TProperty>> predicate)
             where TEntity : class
             where TProperty : class
         {
-            var query = source.Query.Select(predicate);
+            var repo = (BaseReadRepository<TEntity>)source;
+            var query = repo.Query.Select(predicate);
             return new BaseReadRepository<TProperty>.QueryableOperator<TProperty>(query);
         }
+
     }
 }
