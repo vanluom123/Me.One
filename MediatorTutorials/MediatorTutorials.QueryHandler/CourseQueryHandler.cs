@@ -9,7 +9,8 @@ namespace MediatorTutorials.QueryHandler
 {
     public class CourseQueryHandler
         : IQueryHandlerAsync<GetCourses, ListResult<GetCourseResult>>,
-            IQueryHandlerAsync<GetCourseByStudent, ListResult<GetCourseResult>>
+            IQueryHandlerAsync<GetCourseByStudent, ListResult<GetCourseResult>>,
+            IQueryHandlerAsync<GetCourse, GetCourseResult>
     {
         private readonly ICourseBusiness _courseBusiness;
 
@@ -26,6 +27,11 @@ namespace MediatorTutorials.QueryHandler
         public async Task<ListResult<GetCourseResult>> HandleAsync(GetCourses query)
         {
             return await _courseBusiness.GetAllCourses(query);
+        }
+
+        public async Task<GetCourseResult> HandleAsync(GetCourse query)
+        {
+            return await _courseBusiness.GetCourseById(query);
         }
     }
 }

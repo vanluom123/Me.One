@@ -11,5 +11,6 @@ namespace MediatorTutorials.Core.Contacts.Business
         Task Create(CreateCourse command);
         Task<ListResult<GetCourseResult>> GetAllCourses(GetCourses query);
         Task<ListResult<GetCourseResult>> GetListCoursesByStudent(GetCourseByStudent query);
+        Task<GetCourseResult> GetCourseById (GetCourse query);
     }
 }

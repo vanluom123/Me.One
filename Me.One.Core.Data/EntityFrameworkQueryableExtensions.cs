@@ -32,5 +32,15 @@ namespace Me.One.Core.Data
                 queryableOperator,
                 source.IncludableQueryable.ThenInclude(navigationPropertyPath));
         }
+
+        public static IBaseReadRepository<TProperty> Select<TEntity, TProperty>(
+            this IQueryRepository<TEntity> source,
+            Expression<Func<TEntity, TProperty>> predicate)
+            where TEntity : class
+            where TProperty : class
+        {
+            var query = source.Query.Select(predicate);
+            return new BaseReadRepository<TProperty>.QueryableOperator<TProperty>(query);
+        }
     }
 }

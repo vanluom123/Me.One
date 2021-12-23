@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
 using AutoMapper;
+using Kledex;
 using Me.One.Core.Business;
 using Me.One.Core.CQRS.Models;
 using Me.One.Core.Data;

@@ -28,7 +28,20 @@ namespace Me.One.Core.Data
 
         public T GetById(string id)
         {
-            return _context.Set<T>().Find(id);
+            var propertyInfos = typeof(T).BaseType.GetProperties();
+            var propertyInfo = propertyInfos.FirstOrDefault(info => info.Name == "Id");
+            ParameterExpression parameterExpression = Expression.Parameter(typeof(T), "q");
+            MemberExpression memberExpression = Expression.Property(parameterExpression, propertyInfo);
+            BinaryExpression binaryExpression = Expression.Equal(memberExpression, Expression.Constant(id));
+            LambdaExpression lambdaExpression = Expression.Lambda(binaryExpression, parameterExpression);
+            MethodCallExpression methodCallExpression = Expression.Call(
+                typeof(Queryable),
+                "FirstOrDefault",
+                new Type[] { typeof(T) },
+                Query.Expression,
+                Expression.Quote(lambdaExpression));
+            var result = Query.Provider.Execute<T>(methodCallExpression);
+            return result;
         }
 
         public IEnumerable<T> GetByIds(params string[] ids)
@@ -281,7 +294,7 @@ namespace Me.One.Core.Data
             }
         }
 
-        private class QueryableOperator<TEntity> : IQueryRepository<TEntity>
+        internal class QueryableOperator<TEntity> : IQueryRepository<TEntity>
             where TEntity : class
         {
             public QueryableOperator(IQueryable<TEntity> query)
@@ -326,12 +339,23 @@ namespace Me.One.Core.Data
 
             public TEntity GetById(Guid id)
             {
-                throw new NotImplementedException();
+                return GetById(id.ToString());
             }
 
             public TEntity GetById(string id)
             {
-                throw new NotImplementedException();
+                ParameterExpression parameterExpression = Expression.Parameter(typeof(TEntity), nameof(TEntity));
+                MemberExpression memberExpression = Expression.PropertyOrField(parameterExpression, "Id");
+                BinaryExpression binaryExpression = Expression.Equal(memberExpression, Expression.Variable(typeof(string)));
+                LambdaExpression lambdaExpression = Expression.Lambda(binaryExpression, parameterExpression);
+                MethodCallExpression methodCallExpression = Expression.Call(
+                    typeof(Queryable),
+                    "FirstOrDefault",
+                    new Type[2] { typeof(TEntity), memberExpression.Type },
+                    Query.Expression,
+                    Expression.Quote(lambdaExpression));
+                Query = Query.Provider.CreateQuery<TEntity>(methodCallExpression);
+                return Query.Provider.Execute<TEntity>(methodCallExpression);
             }
 
             public IEnumerable<TEntity> GetByIds(params string[] ids)
@@ -486,6 +510,7 @@ namespace Me.One.Core.Data
                 totalRecords = queryable.Count(predicate);
                 return queryable.Skip(count2).Take(pageSize).AsEnumerable();
             }
+
         }
 
         internal class QueryableRepoOperator<TEntity> : IQueryRepository<TEntity>

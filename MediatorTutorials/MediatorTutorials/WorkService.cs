@@ -25,7 +25,6 @@ namespace MediatorTutorials
         public Task StartAsync(CancellationToken cancellationToken)
         {
             GetStudentsByCourse();
-            GetStudents();
             return Task.CompletedTask;
         }
 

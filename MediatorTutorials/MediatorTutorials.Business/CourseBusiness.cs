@@ -48,6 +48,14 @@ namespace MediatorTutorials.Business
             return await Task.FromResult(result);
         }
 
+        public async Task<GetCourseResult> GetCourseById(GetCourse query)
+        {
+            var result = new GetCourseResult();
+            var course = _courseRepository.GetCourseById(query.Id);
+            result = _mapper.Map<GetCourseResult>(course);
+            return await Task.FromResult(result);
+        }
+
         public async Task<ListResult<GetCourseResult>> GetListCoursesByStudent(GetCourseByStudent query)
         {
             var result = new ListResult<GetCourseResult>();

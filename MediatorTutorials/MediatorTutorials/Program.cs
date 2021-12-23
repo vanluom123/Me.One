@@ -71,7 +71,7 @@ namespace MediatorTutorials
 
         private static void ConfigServices(IServiceCollection services)
         {
-            services.AddDbContext<DbContext, CoreDataContext>(options =>
+            services.AddDbContextPool<DbContext, CoreDataContext>(options =>
                 options.UseSqlServer(ConnectionString, o =>
                     o.MigrationsAssembly("MediatorTutorials")));
 

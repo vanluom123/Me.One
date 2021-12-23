@@ -82,6 +82,13 @@ namespace Me.One.Core.Data.Dapper
 
         public void BatchDelete(IEnumerable<T> entities, bool saveChanges = false)
         {
+            foreach (var entity in entities)
+            {
+                entity.Deleted = true;
+                entity.LastUpdatedDateTime = DateTime.UtcNow;
+                entity.RowVersion = 0;
+                this.Delete(entity.Id);
+            }
         }
 
         public void BatchInsert(IEnumerable<T> entities, bool saveChanges = false)
@@ -99,8 +106,8 @@ namespace Me.One.Core.Data.Dapper
 
         public void BatchInsertOrUpdate(IEnumerable<T> entities, bool saveChanges = false)
         {
-            BatchInsert(entities.Where((Func<T, bool>) (item => string.IsNullOrWhiteSpace(item.Id))), saveChanges);
-            BatchUpdate(entities.Where((Func<T, bool>) (item => !string.IsNullOrWhiteSpace(item.Id))), saveChanges);
+            BatchInsert(entities.Where((Func<T, bool>)(item => string.IsNullOrWhiteSpace(item.Id))), saveChanges);
+            BatchUpdate(entities.Where((Func<T, bool>)(item => !string.IsNullOrWhiteSpace(item.Id))), saveChanges);
         }
 
         public void BatchMarkDelete(IEnumerable<T> entities, bool saveChanges = false)
