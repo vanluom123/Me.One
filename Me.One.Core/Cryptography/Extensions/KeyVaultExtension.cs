@@ -6,46 +6,54 @@ namespace Me.One.Core.Cryptography.Extensions
 {
     public static class KeyVaultExtension
     {
-        private static AzureKeyVault Vault;
+        private static AzureKeyVault _vault;
 
         public static void InitVault(string client, string clientSecret, string name)
         {
-            Vault = new AzureKeyVault(client, clientSecret, name);
+            _vault = new AzureKeyVault(client, clientSecret, name);
         }
 
         public static void ApplyVault(this IConfigableSetting setting, string sectionName)
         {
             if (setting == null)
                 throw new NullReferenceException("Appsettings null");
-            if (Vault == null)
+            if (_vault == null)
                 throw new NullReferenceException("Need to call InitVault before apply vault to setting");
             ApplyKeyVaultProperties(sectionName, setting.GetType(), setting);
         }
 
         private static void ApplyKeyVaultProperties(string prefix, Type type, object instance)
         {
-            var list = type.GetProperties(BindingFlags.Instance | BindingFlags.Public).ToList();
-            for (var index = 0; index < list.Count; ++index)
+            var propertyInfos = type.GetProperties(BindingFlags.Instance | BindingFlags.Public).ToList();
+            foreach (var info in propertyInfos)
+            {
                 try
                 {
-                    var propertyType = list[index].PropertyType;
-                    if (!propertyType.IsArray && list[index].GetCustomAttributes<KeyVaultAttribute>().Any() &&
+                    var propertyType = info.PropertyType;
+                    if (!propertyType.IsArray && info.GetCustomAttributes<KeyVaultAttribute>().Any() &&
                         instance != null)
                     {
-                        var result = Vault.GetKey(prefix + "-" + list[index].Name).Result;
+                        var result = _vault.GetKey(prefix + "-" + info.Name).Result;
                         if (result != null)
-                            list[index].SetValue(instance, Convert.ChangeType(result, propertyType));
+                        {
+                            info.SetValue(instance, Convert.ChangeType(result, propertyType));
+                        }
                     }
 
-                    if (propertyType.IsClass)
-                        if (!propertyType.FullName.StartsWith("System."))
-                            ApplyKeyVaultProperties(prefix + "-" + list[index].Name, propertyType,
-                                list[index].GetValue(instance));
+                    if (!propertyType.IsClass)
+                        continue;
+                    
+                    if (!propertyType.FullName!.StartsWith("System."))
+                    {
+                        ApplyKeyVaultProperties(prefix + "-" + info.Name, propertyType,
+                            info.GetValue(instance));
+                    }
                 }
                 catch (System.Exception ex)
                 {
                     Console.WriteLine(ex);
                 }
+            }
         }
     }
 }

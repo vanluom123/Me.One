@@ -22,25 +22,25 @@ namespace Me.One.Core.Web.Authorization
             var list = context.PendingRequirements.ToList();
             var flag = true;
             foreach (var requirement in list)
-                if (requirement is RoleRequirement)
+                if (requirement is RoleRequirement roleRequirement)
                 {
-                    if (!CheckRoles(context.User.Identity, ((RoleRequirement) requirement).Roles))
+                    if (!CheckRoles(context.User.Identity, roleRequirement.Roles))
                     {
                         flag = false;
                         break;
                     }
 
-                    context.Succeed(requirement);
+                    context.Succeed(roleRequirement);
                 }
-                else if (requirement is PermissionRequirement)
+                else if (requirement is PermissionRequirement permissionRequirement)
                 {
-                    if (!CheckPermissions(context.User.Identity, ((PermissionRequirement) requirement).Permissions))
+                    if (!CheckPermissions(context.User.Identity, permissionRequirement.Permissions))
                     {
                         flag = false;
                         break;
                     }
 
-                    context.Succeed(requirement);
+                    context.Succeed(permissionRequirement);
                 }
 
             if (!flag)
@@ -50,28 +50,18 @@ namespace Me.One.Core.Web.Authorization
 
         protected bool CheckPermissions(IIdentity identity, IEnumerable<string> requirePermissions)
         {
-            if (identity.IsAuthenticated)
-            {
-                if (!(requirePermissions is IList<string> source2))
-                    source2 = requirePermissions.ToList();
-                if (source2.Any((Func<string, bool>) (p => _authorizationService.TryCheckAccess(p, identity))))
-                    return true;
-            }
-
-            return false;
+            if (!identity.IsAuthenticated) return false;
+            if (requirePermissions is not IList<string> source2)
+                source2 = requirePermissions.ToList();
+            return source2.Any((Func<string, bool>) (p => _authorizationService.TryCheckAccess(p, identity)));
         }
 
         protected bool CheckRoles(IIdentity identity, IEnumerable<string> requireRoles)
         {
-            if (identity.IsAuthenticated)
-            {
-                if (!(requireRoles is IList<string> source2))
-                    source2 = requireRoles.ToList();
-                if (source2.Any((Func<string, bool>) (r => _authorizationService.TryCheckRole(r, identity))))
-                    return true;
-            }
-
-            return false;
+            if (!identity.IsAuthenticated) return false;
+            if (requireRoles is not IList<string> source2)
+                source2 = requireRoles.ToList();
+            return source2.Any((Func<string, bool>) (r => _authorizationService.TryCheckRole(r, identity)));
         }
     }
 }

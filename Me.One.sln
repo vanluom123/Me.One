@@ -16,17 +16,17 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Bus", "Bus", "{251B740A-EE9
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "CQRS", "CQRS", "{AFCC65C6-074A-4969-A36A-13AB9139BDA7}"
 EndProject
-Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "MediatorTutorials.Business", "MediatorTutorials\MediatorTutorials.Business\MediatorTutorials.Business.csproj", "{81376B02-6E27-4645-8393-B1F648903A04}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Demo.Business", "Demo\Demo.Business\Demo.Business.csproj", "{81376B02-6E27-4645-8393-B1F648903A04}"
 EndProject
-Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "MediatorTutorials.Core", "MediatorTutorials\MediatorTutorials.Core\MediatorTutorials.Core.csproj", "{DC7752C6-4DD5-44ED-A3A2-D0BD63C7547F}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Demo.Core", "Demo\Demo.Core\Demo.Core.csproj", "{DC7752C6-4DD5-44ED-A3A2-D0BD63C7547F}"
 EndProject
-Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "MediatorTutorials.Data", "MediatorTutorials\MediatorTutorials.Data\MediatorTutorials.Data.csproj", "{50E507FA-348F-4CA2-93D4-00EBD1C4FC0F}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Demo.Data", "Demo\Demo.Data\Demo.Data.csproj", "{50E507FA-348F-4CA2-93D4-00EBD1C4FC0F}"
 EndProject
-Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "MediatorTutorials.CommandHander", "MediatorTutorials\MediatorTutorials.CommandHander\MediatorTutorials.CommandHander.csproj", "{9100F2C6-0227-4305-B267-ABC96B874AD0}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Demo.CommandHandler", "Demo\Demo.CommandHandler\Demo.CommandHandler.csproj", "{9100F2C6-0227-4305-B267-ABC96B874AD0}"
 EndProject
-Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "MediatorTutorials.QueryHandler", "MediatorTutorials\MediatorTutorials.QueryHandler\MediatorTutorials.QueryHandler.csproj", "{618B9ED3-20A6-423C-A613-5E884F5CB6AD}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Demo.QueryHandler", "Demo\Demo.QueryHandler\Demo.QueryHandler.csproj", "{618B9ED3-20A6-423C-A613-5E884F5CB6AD}"
 EndProject
-Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "MediatorTutorials", "MediatorTutorials\MediatorTutorials\MediatorTutorials.csproj", "{5DBAF44B-6604-4C8C-A4C4-4CF502EE61AB}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Demo", "Demo\Demo\Demo.csproj", "{5DBAF44B-6604-4C8C-A4C4-4CF502EE61AB}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution

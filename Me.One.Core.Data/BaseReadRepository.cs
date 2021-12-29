@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Linq.Expressions;
+using System.Threading.Tasks;
 using Me.One.Core.Contract.Repository;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Query;
@@ -125,7 +126,46 @@ namespace Me.One.Core.Data
 
         public T FirstOrDefault(Expression<Func<T, bool>> predicate)
         {
-            return new QueryableRepoOperator<T>(this).FirstOrDefault(predicate);
+            return Query.FirstOrDefault(predicate);
+        }
+
+        public Task<T> FirstOrDefaultAsync(Expression<Func<T, bool>> predicate)
+        {
+            return Query.FirstOrDefaultAsync(predicate);
+        }
+
+        public Task<T> GetByIdAsync(Guid id)
+        {
+            return this.GetByIdAsync(id.ToString());
+        }
+
+        public Task<T> GetByIdAsync(string id)
+        {
+            var propertyInfos = typeof(T).BaseType.GetProperties();
+            var propertyInfo = propertyInfos.FirstOrDefault(info => info.Name == "Id");
+            ParameterExpression parameterExpression = Expression.Parameter(typeof(T), "q");
+            MemberExpression memberExpression = Expression.Property(parameterExpression, propertyInfo);
+            BinaryExpression binaryExpression = Expression.Equal(memberExpression, Expression.Constant(id));
+            LambdaExpression lambdaExpression = Expression.Lambda(binaryExpression, parameterExpression);
+            MethodCallExpression methodCallExpression = Expression.Call(
+                typeof(Queryable),
+                "FirstOrDefaultAsync",
+                new Type[] { typeof(T) },
+                Query.Expression,
+                Expression.Quote(lambdaExpression));
+            var result = Query.Provider.Execute<T>(methodCallExpression);
+            return Task.FromResult(result);
+
+        }
+
+        public Task<IEnumerable<T>> GetByIdsAsync(params string[] ids)
+        {
+            return Task.FromResult(ids.Select(GetById));
+        }
+
+        public Task<bool> AnyAsync(Expression<Func<T, bool>> predicate)
+        {
+            return Query.AnyAsync(predicate);
         }
 
         private IOrderedQueryable<T> Order(
@@ -233,6 +273,7 @@ namespace Me.One.Core.Data
             return source1.Skip(count).Take(pageSize).AsEnumerable();
         }
 
+
         internal class IncludeQueryableOperator<TEntity, TPro> :
             QueryableRepoOperator<TEntity>,
             IIncludeableReadRepository<TEntity, TPro>
@@ -252,8 +293,6 @@ namespace Me.One.Core.Data
                 Query = IncludableQueryable;
             }
 
-            public IIncludableQueryable<TEntity, TPro> IncludableQueryable { get; private set; }
-
             public IIncludeableReadRepository<TEntity, TPro> IncludeInternal(
                 Expression<Func<TEntity, TPro>> navigationPropertyPath)
             {
@@ -261,6 +300,9 @@ namespace Me.One.Core.Data
                 Query = IncludableQueryable;
                 return this;
             }
+
+            public IIncludableQueryable<TEntity, TPro> IncludableQueryable { get; protected set; }
+
         }
 
         internal class JoinQueryableOperator<TEntity> : QueryableRepoOperator<TEntity>
@@ -387,6 +429,44 @@ namespace Me.One.Core.Data
             public TEntity FirstOrDefault(Expression<Func<TEntity, bool>> predicate)
             {
                 return Query.FirstOrDefault(predicate);
+            }
+
+            public Task<TEntity> FirstOrDefaultAsync(Expression<Func<TEntity, bool>> predicate)
+            {
+                return Query.FirstOrDefaultAsync(predicate);
+            }
+
+            public Task<TEntity> GetByIdAsync(Guid id)
+            {
+                return this.GetByIdAsync(id.ToString());
+            }
+
+            public Task<TEntity> GetByIdAsync(string id)
+            {
+                var propertyInfos = typeof(TEntity).BaseType.GetProperties();
+                var propertyInfo = propertyInfos.FirstOrDefault(info => info.Name == "Id");
+                ParameterExpression parameterExpression = Expression.Parameter(typeof(TEntity), "q");
+                MemberExpression memberExpression = Expression.Property(parameterExpression, propertyInfo);
+                BinaryExpression binaryExpression = Expression.Equal(memberExpression, Expression.Constant(id));
+                LambdaExpression lambdaExpression = Expression.Lambda(binaryExpression, parameterExpression);
+                MethodCallExpression methodCallExpression = Expression.Call(
+                    typeof(Queryable),
+                    "FirstOrDefaultAsync",
+                    new Type[] { typeof(TEntity) },
+                    Query.Expression,
+                    Expression.Quote(lambdaExpression));
+                var result = Query.Provider.Execute<TEntity>(methodCallExpression);
+                return Task.FromResult(result);
+            }
+
+            public Task<IEnumerable<TEntity>> GetByIdsAsync(params string[] ids)
+            {
+                return Task.FromResult(ids.Select(GetById));
+            }
+
+            public Task<bool> AnyAsync(Expression<Func<TEntity, bool>> predicate)
+            {
+                return Query.AnyAsync(predicate);
             }
 
             public IBaseReadRepository<TEntity> Include(string navigationPropertyPath)
@@ -626,14 +706,41 @@ namespace Me.One.Core.Data
 
             public TEntity FirstOrDefault(Expression<Func<TEntity, bool>> predicate)
             {
-                return Query.FirstOrDefault(predicate);
+                return _repo.FirstOrDefault(predicate);
             }
+
+            public Task<TEntity> FirstOrDefaultAsync(Expression<Func<TEntity, bool>> predicate)
+            {
+                return _repo.FirstOrDefaultAsync(predicate);
+            }
+
+            public Task<TEntity> GetByIdAsync(Guid id)
+            {
+                return _repo.GetByIdAsync(id);
+            }
+
+            public Task<TEntity> GetByIdAsync(string id)
+            {
+                return _repo.GetByIdAsync(id);
+            }
+
+            public Task<IEnumerable<TEntity>> GetByIdsAsync(params string[] ids)
+            {
+                return _repo.GetByIdsAsync(ids);
+            }
+
+            public Task<bool> AnyAsync(Expression<Func<TEntity, bool>> predicate)
+            {
+                return _repo.AnyAsync(predicate);
+            }
+
 
             public IQueryable<TEntity> Query
             {
-                get { return _repo.Query; }
-                protected set { _repo.Query = value; }
+                get => _repo.Query;
+                protected set => _repo.Query = value;
             }
         }
+
     }
 }

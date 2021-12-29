@@ -32,9 +32,12 @@ namespace Me.One.Core.Cryptography
                     }
             }
 
-            if (numArray != null)
-                foreach (var num in numArray)
-                    stringBuilder.Append(num.ToString("x2"));
+            if (numArray == null)
+                return stringBuilder.ToString();
+            
+            foreach (var num in numArray)
+                stringBuilder.Append(num.ToString("x2"));
+            
             return stringBuilder.ToString();
         }
 
@@ -60,9 +63,12 @@ namespace Me.One.Core.Cryptography
                     }
             }
 
-            if (numArray != null)
-                foreach (var num in numArray)
-                    stringBuilder.Append(num.ToString("x2"));
+            if (numArray == null)
+                return stringBuilder.ToString();
+            
+            foreach (var num in numArray)
+                stringBuilder.Append(num.ToString("x2"));
+            
             return stringBuilder.ToString();
         }
 

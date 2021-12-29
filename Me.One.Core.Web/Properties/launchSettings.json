@@ -1,0 +1,10 @@
+{
+  "profiles": {
+    "Me.One.Core.Web": {
+      "commandName": "Project"
+    },
+    "Docker": {
+      "commandName": "Docker"
+    }
+  }
+}

@@ -97,7 +97,8 @@ namespace Me.One.Core.AzureBlob
                 Permissions = SharedAccessBlobPermissions.Read
             };
             var sharedAccessSignature = blockBlobReference.GetSharedAccessSignature(policy);
-            return blockBlobReference.Uri + sharedAccessSignature;
+            var uriSharedAccessSignature = blockBlobReference.Uri + sharedAccessSignature;
+            return await Task.FromResult(uriSharedAccessSignature);
         }
 
         public async Task<string> GetContainerSas(DateTime? expiresOn = null)
@@ -105,12 +106,13 @@ namespace Me.One.Core.AzureBlob
             InitConnection();
             if (!expiresOn.HasValue)
                 expiresOn = DateTime.Now.AddHours(1.0);
-            return _cloudBlobContainer.GetSharedAccessSignature(new SharedAccessBlobPolicy
+            var sharedAccessSignature = _cloudBlobContainer.GetSharedAccessSignature(new SharedAccessBlobPolicy
             {
                 SharedAccessStartTime = DateTimeOffset.UtcNow.AddMinutes(-5.0),
                 SharedAccessExpiryTime = DateTime.SpecifyKind(expiresOn.Value, DateTimeKind.Utc),
                 Permissions = SharedAccessBlobPermissions.Read
             });
+            return await Task.FromResult(sharedAccessSignature);
         }
 
         public async Task UploadAsync(string cloudPath, byte[] buffer, string mime = null)
@@ -143,11 +145,9 @@ namespace Me.One.Core.AzureBlob
             var blob = _cloudBlobContainer.GetBlockBlobReference(cloudPath);
             if (!string.IsNullOrEmpty(mime))
                 blob.Properties.ContentType = mime;
-            using (var stream = new MemoryStream(Convert.FromBase64String(base64)))
-            {
-                await blob.UploadFromStreamAsync(stream);
-                return blob.Uri.AbsoluteUri;
-            }
+            await using var stream = new MemoryStream(Convert.FromBase64String(base64));
+            await blob.UploadFromStreamAsync(stream);
+            return blob.Uri.AbsoluteUri;
         }
 
         public async Task DownloadAsync(string cloudPath, string destinationPath)
@@ -207,17 +207,21 @@ namespace Me.One.Core.AzureBlob
         {
             if (!InitConnection())
                 return;
+            List<string> lstFileNames = null;
             if (fileNames != null)
-                foreach (var fileName in fileNames)
+            {
+                lstFileNames = fileNames.ToList();
+                foreach (var fileName in lstFileNames)
                 {
                     Path.Combine(cloudFolder, fileName);
                     var num = await _cloudBlobContainer.GetBlockBlobReference(cloudFolder).DeleteIfExistsAsync()
                         ? 1
                         : 0;
                 }
+            }
 
             cloudFolder = StandardizedKey(cloudFolder);
-            await DeleteFolder(_cloudBlobContainer.GetDirectoryReference(cloudFolder), fileNames);
+            await DeleteFolder(_cloudBlobContainer.GetDirectoryReference(cloudFolder), lstFileNames);
         }
 
         public async Task DeleteAsync(string cloudPath)
@@ -243,6 +247,7 @@ namespace Me.One.Core.AzureBlob
             if (!localDir.Exists)
                 localDir.Create();
             BlobContinuationToken dirToken = null;
+            var listFileNames = fileNames?.ToList();
             do
             {
                 var blobResultSegment = await blobDirectory.ListBlobsSegmentedAsync(dirToken);
@@ -252,17 +257,16 @@ namespace Me.One.Core.AzureBlob
                     var name = GetName(result);
                     switch (result)
                     {
-                        case CloudBlobDirectory _:
-                            var blobDirectory1 = result as CloudBlobDirectory;
+                        case CloudBlobDirectory blobDirectory1:
                             var directoryInfo = new DirectoryInfo(Path.Combine(localDir.FullName, name));
-                            await DownloadFolder(blobDirectory1, localDir, fileNames);
+                            await DownloadFolder(blobDirectory1, localDir, listFileNames);
                             continue;
-                        case CloudBlockBlob _ when fileNames != null && fileNames.Contains(name):
-                            await (result as CloudBlockBlob).DownloadToFileAsync(Path.Combine(localDir.FullName, name),
+                        case CloudBlockBlob cloudBlockBlob when listFileNames != null && listFileNames.Contains(name):
+                            await cloudBlockBlob.DownloadToFileAsync(Path.Combine(localDir.FullName, name),
                                 FileMode.Create);
                             continue;
-                        case CloudBlockBlob _ when fileNames == null:
-                            await (result as CloudBlockBlob).DownloadToFileAsync(Path.Combine(localDir.FullName, name),
+                        case CloudBlockBlob cloudBlockBlob when listFileNames == null:
+                            await cloudBlockBlob.DownloadToFileAsync(Path.Combine(localDir.FullName, name),
                                 FileMode.Create);
                             continue;
                         default:
@@ -279,6 +283,7 @@ namespace Me.One.Core.AzureBlob
             IEnumerable<string> fileNames = null)
         {
             BlobContinuationToken dirToken = null;
+            var listFileNames = fileNames?.ToList();
             do
             {
                 var blobResultSegment = await cloudBlobDirectory.ListBlobsSegmentedAsync(dirToken);
@@ -288,14 +293,14 @@ namespace Me.One.Core.AzureBlob
                     var name = GetName(result);
                     switch (result)
                     {
-                        case CloudBlobDirectory _:
-                            await DeleteFolder(result as CloudBlobDirectory, fileNames);
+                        case CloudBlobDirectory blobDirectory:
+                            await DeleteFolder(blobDirectory, listFileNames);
                             continue;
-                        case CloudBlockBlob _ when fileNames != null && fileNames.Contains(name):
-                            var num1 = await (result as CloudBlockBlob).DeleteIfExistsAsync() ? 1 : 0;
+                        case CloudBlockBlob cloudBlockBlob when listFileNames != null && listFileNames.Contains(name):
+                            var num1 = await cloudBlockBlob.DeleteIfExistsAsync() ? 1 : 0;
                             continue;
-                        case CloudBlockBlob _ when !string.IsNullOrEmpty(name):
-                            var num2 = await (result as CloudBlockBlob).DeleteIfExistsAsync() ? 1 : 0;
+                        case CloudBlockBlob cloudBlockBlob when !string.IsNullOrEmpty(name):
+                            var num2 = await cloudBlockBlob.DeleteIfExistsAsync() ? 1 : 0;
                             continue;
                         default:
                             continue;

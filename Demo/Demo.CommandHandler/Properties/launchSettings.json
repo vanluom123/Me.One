@@ -1,0 +1,10 @@
+{
+  "profiles": {
+    "MediatorTutorials.CommandHander": {
+      "commandName": "Project"
+    },
+    "Docker": {
+      "commandName": "Docker"
+    }
+  }
+}

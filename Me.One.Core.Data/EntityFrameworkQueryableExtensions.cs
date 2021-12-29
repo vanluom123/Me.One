@@ -43,6 +43,5 @@ namespace Me.One.Core.Data
             var query = repo.Query.Select(predicate);
             return new BaseReadRepository<TProperty>.QueryableOperator<TProperty>(query);
         }
-
     }
 }

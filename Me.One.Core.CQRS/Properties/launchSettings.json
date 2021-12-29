@@ -1,0 +1,10 @@
+{
+  "profiles": {
+    "Me.One.Core.CQRS": {
+      "commandName": "Project"
+    },
+    "Docker": {
+      "commandName": "Docker"
+    }
+  }
+}

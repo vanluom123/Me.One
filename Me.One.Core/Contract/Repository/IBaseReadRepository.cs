@@ -2,7 +2,7 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Linq.Expressions;
-using Microsoft.EntityFrameworkCore.Query;
+using System.Threading.Tasks;
 
 namespace Me.One.Core.Contract.Repository
 {
@@ -58,6 +58,15 @@ namespace Me.One.Core.Contract.Repository
         IBaseReadRepository<T> Where(Expression<Func<T, bool>> predicate);
 
         T FirstOrDefault(Expression<Func<T, bool>> predicate);
+        
+        Task<T> FirstOrDefaultAsync(Expression<Func<T, bool>> predicate);
+        
+        Task<T> GetByIdAsync(Guid id);
+        
+        Task<T> GetByIdAsync(string id);
+        
+        Task<IEnumerable<T>> GetByIdsAsync(params string[] ids);
 
+        Task<bool> AnyAsync(Expression<Func<T, bool>> predicate);
     }
 }

@@ -4,11 +4,11 @@ namespace Me.One.Core.Web.Authorization
 {
     public class RequiredRoleAttribute : AuthorizeAttribute
     {
-        public const string PolicyPrefix = "AIAONE.ROLE:";
+        public const string PolicyPrefix = "MEONE.ROLE:";
 
         public RequiredRoleAttribute(params string[] roles)
         {
-            Policy = "AIAONE.ROLE:" + string.Join(",", roles);
+            Policy = "MEONE.ROLE:" + string.Join(",", roles);
         }
     }
 }

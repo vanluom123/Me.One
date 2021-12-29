@@ -12,19 +12,24 @@ namespace Me.One.Core.Web.Authorization
         {
         }
 
+        /// <summary>
+        /// Get policy.
+        /// MEONE.PERMISSION is able to change.
+        /// </summary>
+        /// <param name="policyName"></param>
         public override Task<AuthorizationPolicy> GetPolicyAsync(
             string policyName)
         {
-            if (policyName.StartsWith("AIAONE.PERMISSION:", StringComparison.OrdinalIgnoreCase))
+            if (policyName.StartsWith("MEONE.PERMISSION:", StringComparison.OrdinalIgnoreCase))
             {
-                var strArray = policyName.Substring("AIAONE.PERMISSION:".Length).Split(',');
+                var strArray = policyName.Substring("MEONE.PERMISSION:".Length).Split(',');
                 return Task.FromResult(new AuthorizationPolicyBuilder(Array.Empty<string>())
                     .AddRequirements(new PermissionRequirement(strArray)).Build());
             }
 
-            if (!policyName.StartsWith("AIAONE.ROLE:", StringComparison.OrdinalIgnoreCase))
+            if (!policyName.StartsWith("MEONE.ROLE:", StringComparison.OrdinalIgnoreCase))
                 return base.GetPolicyAsync(policyName);
-            var strArray1 = policyName.Substring("AIAONE.ROLE:".Length).Split(',');
+            var strArray1 = policyName.Substring("MEONE.ROLE:".Length).Split(',');
             return Task.FromResult(new AuthorizationPolicyBuilder(Array.Empty<string>())
                 .AddRequirements(new RoleRequirement(strArray1)).Build());
         }

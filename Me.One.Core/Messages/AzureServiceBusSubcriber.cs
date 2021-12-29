@@ -33,7 +33,7 @@ namespace Me.One.Core.Messages
             await RegisterQueueHandler(queueName, obj.HandleAsync);
         }
 
-        public async Task RegisterQueueHandler(
+        public Task RegisterQueueHandler(
             string queueName,
             Func<string, string, Task> callback)
         {
@@ -47,6 +47,7 @@ namespace Me.One.Core.Messages
             var queueClient = new QueueClient(serviceBusSubcriber._strConnection, queueName);
             queueClient.RegisterMessageHandler(serviceBusSubcriber.ProcessQueueMessagesAsync, messageHandlerOptions);
             serviceBusSubcriber.AddOrUpdateDictionary(serviceBusSubcriber._queueClients, queueName, queueClient);
+            return Task.CompletedTask;
         }
 
         public async Task RegisterTopicHandler<T>(string topicName, string subcriptionId) where T : IServiceHandler
@@ -69,7 +70,7 @@ namespace Me.One.Core.Messages
                 AutoComplete = false
             };
             var client = new SubscriptionClient(serviceBusSubcriber._strConnection, topicName, subcriptionId);
-            var rules = await client.GetRulesAsync();
+            var rules = (await client.GetRulesAsync()).ToList();
             if (rules.Any((Func<RuleDescription, bool>) (x => x.Name == "SetSubcriptionRule")))
                 await client.RemoveRuleAsync("SetSubcriptionRule");
             if (rules.Any((Func<RuleDescription, bool>) (x => x.Name == "$Default")))

@@ -106,8 +106,9 @@ namespace Me.One.Core.Data.Dapper
 
         public void BatchInsertOrUpdate(IEnumerable<T> entities, bool saveChanges = false)
         {
-            BatchInsert(entities.Where((Func<T, bool>)(item => string.IsNullOrWhiteSpace(item.Id))), saveChanges);
-            BatchUpdate(entities.Where((Func<T, bool>)(item => !string.IsNullOrWhiteSpace(item.Id))), saveChanges);
+            var baseEntities = entities.ToList();
+            BatchInsert(baseEntities.Where((Func<T, bool>)(item => string.IsNullOrWhiteSpace(item.Id))), saveChanges);
+            BatchUpdate(baseEntities.Where((Func<T, bool>)(item => !string.IsNullOrWhiteSpace(item.Id))), saveChanges);
         }
 
         public void BatchMarkDelete(IEnumerable<T> entities, bool saveChanges = false)
