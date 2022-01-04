@@ -1,10 +1,10 @@
 {
   "profiles": {
-    "MediatorTutorials": {
-      "commandName": "Project"
-    },
     "Docker": {
       "commandName": "Docker"
+    },
+    "Demo": {
+      "commandName": "Project"
     }
   }
 }

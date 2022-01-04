@@ -23,5 +23,10 @@ namespace Me.One.Core.DependencyInjection
         void RegisterInstanceNamed<TInterface>(TInterface instance, string name) where TInterface : class;
 
         void RegisterHub<TType>();
+
+        Autofac.Builder.IRegistrationBuilder<object, Autofac.Features.Scanning.ScanningActivatorData, Autofac.Builder.DynamicRegistrationStyle> RegisterAssemblyTypes(params System.Reflection.Assembly[] assemblies);
+
+        Autofac.Builder.IRegistrationBuilder<object, Autofac.Features.Scanning.OpenGenericScanningActivatorData, Autofac.Builder.DynamicRegistrationStyle> RegisterAssemblyOpenGenericTypes(params System.Reflection.Assembly[] assemblies);
+
     }
 }

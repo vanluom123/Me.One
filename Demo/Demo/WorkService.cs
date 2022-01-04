@@ -38,10 +38,7 @@ namespace Demo
 
         public Task StartAsync(CancellationToken cancellationToken)
         {
-            foreach (var listFunction in _listFunctions)
-            {
-                listFunction();
-            }
+            _listFunctions[2]();
             return Task.CompletedTask;
         }
 

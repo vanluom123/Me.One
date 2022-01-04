@@ -121,7 +121,8 @@ namespace Me.One.Core.Data
 
         public IBaseReadRepository<T> Where(Expression<Func<T, bool>> predicate)
         {
-            return new QueryableRepoOperator<T>(this).Where(predicate);
+            Query = Query.Where(predicate);
+            return this;
         }
 
         public T FirstOrDefault(Expression<Func<T, bool>> predicate)
@@ -700,8 +701,7 @@ namespace Me.One.Core.Data
 
             public IBaseReadRepository<TEntity> Where(Expression<Func<TEntity, bool>> predicate)
             {
-                Query = Query.Where(predicate);
-                return this;
+                return _repo.Where(predicate);
             }
 
             public TEntity FirstOrDefault(Expression<Func<TEntity, bool>> predicate)

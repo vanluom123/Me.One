@@ -15,8 +15,16 @@ namespace Demo
         public static string GetPath()
         {
             var allDrives = GetDriveInfo();
-            var drive = allDrives.FirstOrDefault(drive => !drive.Name.Equals(GetPathRoot()));
-            return drive!.Name;
+            DriveInfo drive = null;
+            if(allDrives.Length > 1)
+            {
+                drive = allDrives.FirstOrDefault(drive => !drive.Name.Equals(GetPathRoot()));
+            }
+            else if(allDrives.Length < 1 && allDrives.Length != 0)
+            {
+                drive = allDrives.FirstOrDefault(drive => drive.Name.Equals(GetPathRoot()));
+            }
+            return drive.Name;
         }
 
         public static DriveInfo[] GetDriveInfo()

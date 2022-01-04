@@ -184,5 +184,15 @@ namespace Me.One.Core.DependencyInjection
         {
             Builder.RegisterModule(module);
         }
+
+        public Autofac.Builder.IRegistrationBuilder<object, Autofac.Features.Scanning.ScanningActivatorData, Autofac.Builder.DynamicRegistrationStyle> RegisterAssemblyTypes(params System.Reflection.Assembly[] assemblies)
+        {
+            return Builder.RegisterAssemblyTypes(assemblies);
+        }
+        
+        public Autofac.Builder.IRegistrationBuilder<object, Autofac.Features.Scanning.OpenGenericScanningActivatorData, Autofac.Builder.DynamicRegistrationStyle> RegisterAssemblyOpenGenericTypes(params System.Reflection.Assembly[] assemblies)
+        {
+            return Builder.RegisterAssemblyOpenGenericTypes(assemblies);
+        }
     }
 }

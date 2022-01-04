@@ -73,8 +73,8 @@ namespace Demo
             services.AddDbContextPool<DbContext, CoreDataContext>(options =>
                 options.UseSqlServer(ConnectionString, o => o.MigrationsAssembly("Demo")));
 
-            services.AddKledex(typeof(Demo.CommandHandler.Bootstrapper),
-                typeof(Demo.QueryHandler.Bootstrapper)).AddInMemoryStore();
+            services.AddKledex()
+                .AddInMemoryStore();
 
             services.AddHostedService<WorkService>();
         }
@@ -87,8 +87,9 @@ namespace Demo
             container.RegisterInstance<IResolveDependencies>(container);
 
             Demo.Business.Bootstrapper.CreateBootstrapper(container).WireUp();
-
-            Bootstrapper.CreateBootstrapper(container).WireUp();
+            Demo.Data.Bootstrapper.CreateBootstrapper(container).WireUp();
+            CommandHandler.Bootstrapper.CreateBootstrapper(container).WireUp();
+            QueryHandler.Bootstrapper.CreateBootstrapper(container).WireUp();
             
             DependencyResolver.SetResolver(container);
 
